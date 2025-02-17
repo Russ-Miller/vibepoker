@@ -8,14 +8,14 @@ if (!fs.existsSync(soundsDir)) {
   fs.mkdirSync(soundsDir, { recursive: true });
 }
 
-// Sound effects from freesound.org (all Creative Commons licensed)
+// Sound effects from mixkit.co (free for commercial use)
 const sounds = {
-  'card-slide.mp3': 'https://cdn.freesound.org/previews/240/240777_4107740-lq.mp3', // Card slide sound
-  'hold.mp3': 'https://cdn.freesound.org/previews/270/270304_5123851-lq.mp3', // Button click sound
-  'lose.mp3': 'https://cdn.freesound.org/previews/362/362205_6629250-lq.mp3', // Lose sound
-  'win-small.mp3': 'https://cdn.freesound.org/previews/369/369925_6687669-lq.mp3', // Small win
-  'win-medium.mp3': 'https://cdn.freesound.org/previews/369/369926_6687669-lq.mp3', // Medium win
-  'win-large.mp3': 'https://cdn.freesound.org/previews/369/369927_6687669-lq.mp3', // Large win
+  'card-slide.mp3': 'https://assets.mixkit.co/active_storage/sfx/2356/2356-preview.mp3',
+  'hold.mp3': 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
+  'lose.mp3': 'https://assets.mixkit.co/active_storage/sfx/2960/2960-preview.mp3',
+  'win-small.mp3': 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',
+  'win-medium.mp3': 'https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3',
+  'win-large.mp3': 'https://assets.mixkit.co/active_storage/sfx/2002/2002-preview.mp3',
 };
 
 const downloadFile = (url, filename) => {

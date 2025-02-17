@@ -3,7 +3,7 @@
 let SOUNDS: {
   cardSlide: HTMLAudioElement;
   hold: HTMLAudioElement;
-  lose: HTMLAudioElement;
+  noWin: HTMLAudioElement;
   win: {
     small: HTMLAudioElement;
     medium: HTMLAudioElement;
@@ -19,7 +19,7 @@ if (typeof window !== "undefined") {
     SOUNDS = {
       cardSlide: new Audio("/sounds/card-slide.mp3"),
       hold: new Audio("/sounds/hold.mp3"),
-      lose: new Audio("/sounds/lose.mp3"),
+      noWin: new Audio("/sounds/no-win.mp3"),
       win: {
         small: new Audio("/sounds/win-small.mp3"),
         medium: new Audio("/sounds/win-medium.mp3"),
@@ -36,9 +36,11 @@ if (typeof window !== "undefined") {
           sound.volume = 0.3; // Softer card slide
           sound.playbackRate = 1.2; // Slightly faster card slide
         } else if (sound === SOUNDS?.hold) {
-          sound.volume = 0.4; // Moderate button click
-        } else if (sound === SOUNDS?.lose) {
-          sound.volume = 0.5; // Clear lose sound
+          sound.volume = 0.5; // Moderate click sound
+          sound.playbackRate = 1.0; // Normal speed for mechanical click
+        } else if (sound === SOUNDS?.noWin) {
+          sound.volume = 0.25; // Increased volume for simple buzz sound (1.25x previous value)
+          sound.playbackRate = 1.0; // Normal speed for the buzz
         }
       } else if (typeof sound === 'object') {
         Object.values(sound).forEach(s => {
@@ -108,27 +110,19 @@ export const playWinSound = (amount: number) => {
       } else {
         sound = SOUNDS.win.small;
       }
-      // For wins, let previous sounds finish (don't reset currentTime)
-      // This creates a more celebratory feel for wins
-      const playPromise = sound.play();
-      if (playPromise) {
-        playPromise.catch(() => {
-          // Ignore autoplay errors
-        });
-      }
     } else {
-      // Play lose sound when amount is 0
-      sound = SOUNDS.lose;
-      sound.currentTime = 0; // Reset lose sound to start
-      const playPromise = sound.play();
-      if (playPromise) {
-        playPromise.catch(() => {
-          // Ignore autoplay errors
-        });
-      }
+      sound = SOUNDS.noWin;
+      sound.currentTime = 0; // Reset to start to ensure it plays every time
+    }
+
+    const playPromise = sound.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        // Ignore autoplay errors
+      });
     }
   } catch (error) {
-    console.error("Error playing win/lose sound:", error);
+    console.error("Error playing game sound:", error);
   }
 };
 

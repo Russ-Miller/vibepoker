@@ -3,6 +3,9 @@
 interface PayoutTableProps {
   currentBet: number;
   lastWin?: number;
+  currentHandMultiplier?: number;
+  onToggleSound?: () => void;
+  soundEnabled?: boolean;
 }
 
 const PAYOUTS = [
@@ -17,13 +20,13 @@ const PAYOUTS = [
   { hand: "Jacks or Better", multiplier: 1 },
 ];
 
-export default function PayoutTable({ currentBet, lastWin }: PayoutTableProps) {
+export default function PayoutTable({ currentBet, lastWin, currentHandMultiplier, onToggleSound, soundEnabled }: PayoutTableProps) {
   return (
-    <div className="w-full max-w-sm bg-gray-900 rounded-lg border border-gray-700 overflow-hidden">
-      <div className="p-4 bg-gray-800 border-b border-gray-700">
+    <div className="w-full max-w-sm bg-gray-900 rounded-lg border border-gray-700 overflow-hidden relative">
+      <div className="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
         <h2 className="text-xl font-bold text-white">Payouts</h2>
         {lastWin ? (
-          <div className="text-2xl font-bold text-yellow-400 mt-1">
+          <div className="text-xl font-bold text-yellow-400">
             Win: {lastWin} credits!
           </div>
         ) : null}
@@ -32,10 +35,18 @@ export default function PayoutTable({ currentBet, lastWin }: PayoutTableProps) {
         {PAYOUTS.map(({ hand, multiplier }) => (
           <div
             key={hand}
-            className="flex justify-between items-center p-3 hover:bg-gray-800 transition-colors"
+            className={`flex justify-between items-center p-3 hover:bg-gray-800 transition-colors
+              ${currentHandMultiplier === multiplier ? 'bg-gray-800' : ''}`}
           >
-            <span className="text-white">{hand}</span>
-            <span className="text-yellow-400 font-bold">
+            <div className="flex items-center w-48">
+              <div className="w-6 flex-shrink-0">
+                {currentHandMultiplier === multiplier && (
+                  <span className="text-yellow-400 animate-pulse">▶</span>
+                )}
+              </div>
+              <span className="text-white">{hand}</span>
+            </div>
+            <span className={`font-bold ${currentHandMultiplier === multiplier ? 'text-yellow-400' : 'text-gray-400'}`}>
               {multiplier * currentBet}
             </span>
           </div>

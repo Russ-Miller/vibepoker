@@ -28,6 +28,7 @@ export default function PokerGame() {
   const [gamePhase, setGamePhase] = useState<"betting" | "holding">("betting");
   const [lastWin, setLastWin] = useState<number>(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [currentHandMultiplier, setCurrentHandMultiplier] = useState<number | undefined>();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -77,6 +78,7 @@ export default function PokerGame() {
     setDeck(deck.slice(5));
     setGamePhase("holding");
     setLastWin(0);
+    setCurrentHandMultiplier(undefined); // Clear the current hand multiplier
   };
 
   const toggleHold = (index: number) => {
@@ -99,14 +101,26 @@ export default function PokerGame() {
     setGamePhase("betting");
 
     // Evaluate hand and award credits
-    const winnings = evaluateHand(newHand) * bet;
+    const multiplier = evaluateHand(newHand);
+    const winnings = multiplier * bet;
+    setCurrentHandMultiplier(multiplier); // Set the current hand multiplier
+
     if (winnings > 0) {
       setLastWin(winnings);
-      playWinSound(winnings);
+      // Play appropriate win sound based on multiplier value
+      if (multiplier >= 250) { // Royal Flush
+        playWinSound(250);
+      } else if (multiplier >= 50) { // Straight Flush
+        playWinSound(100);
+      } else if (multiplier >= 25) { // Four of a Kind
+        playWinSound(50);
+      } else {
+        playWinSound(winnings);
+      }
       setCredits(prev => prev + winnings);
     } else {
       setLastWin(0);
-      playWinSound(0); // Explicitly play the lose sound when no payout
+      playWinSound(0);
     }
 
     if (deck.length < 10) {
@@ -207,83 +221,102 @@ export default function PokerGame() {
 
   return (
     <main className="flex min-h-screen flex-col items-center p-8 bg-black text-white">
-      <div className="w-full max-w-6xl space-y-8">
-        <div className="flex justify-between items-center">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-              Jacks or Better Video Poker
-            </h1>
-            <p className="text-sm text-gray-400">Welcome, {user.email}</p>
-          </div>
-          <div className="space-x-6 flex items-center">
-            <button
-              onClick={handleToggleSound}
-              className={`p-2 rounded-lg transition-all duration-200 ${
-                soundEnabled 
-                  ? 'bg-green-600 hover:bg-green-700 text-white' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-              }`}
-              title={soundEnabled ? "Sound On" : "Sound Off"}
-            >
-              {soundEnabled ? (
-                <Volume2 size={24} className="animate-pulse" />
-              ) : (
-                <VolumeX size={24} />
-              )}
-            </button>
-            <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
-              Credits: {credits}
-            </div>
-            <button
-              onClick={() => signOut()}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-
-        <div className="flex gap-8">
-          <div className="flex-1">
-            <div className="flex justify-center space-x-4 my-12">
-              {hand.map((card, index) => (
-                <PlayingCard
-                  key={index}
-                  value={card.value}
-                  suit={card.suit}
-                  held={card.held}
-                  empty={!card.value}
-                  onClick={() => toggleHold(index)}
-                />
-              ))}
+      <div className="w-[1024px] mx-auto">
+        <div className="grid grid-cols-[700px_1fr] gap-8">
+          <div className="space-y-8">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                Jacks or Better Video Poker
+              </h1>
+              <p className="text-sm text-gray-400">Welcome, {user.email}</p>
             </div>
 
-            <div className="flex justify-center space-x-4">
+            <div className="relative">
+              <div className="flex flex-col items-center">
+                <div className="flex justify-center space-x-4 my-12">
+                  {hand.map((card, index) => (
+                    <PlayingCard
+                      key={index}
+                      value={card.value}
+                      suit={card.suit}
+                      held={card.held}
+                      empty={!card.value}
+                      onClick={() => toggleHold(index)}
+                    />
+                  ))}
+                </div>
+
+                <div className="flex justify-center space-x-4">
+                  <button
+                    onClick={() => setBet(Math.max(1, bet - 1))}
+                    disabled={gamePhase === "holding"}
+                    className="px-6 py-3 bg-gray-700 text-white rounded-lg disabled:opacity-50 hover:bg-gray-600 transition-colors"
+                  >
+                    Bet -
+                  </button>
+                  <span className="px-6 py-3 font-bold text-2xl text-yellow-400">Bet: {bet}</span>
+                  <button
+                    onClick={() => setBet(Math.min(5, bet + 1))}
+                    disabled={gamePhase === "holding"}
+                    className="px-6 py-3 bg-gray-700 text-white rounded-lg disabled:opacity-50 hover:bg-gray-600 transition-colors"
+                  >
+                    Bet +
+                  </button>
+                  <button
+                    onClick={gamePhase === "betting" ? dealHand : drawNewCards}
+                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xl min-w-[120px]"
+                  >
+                    {gamePhase === "betting" ? "Deal" : "Draw"}
+                  </button>
+                </div>
+              </div>
+
               <button
-                onClick={() => setBet(Math.max(1, bet - 1))}
-                disabled={gamePhase === "holding"}
-                className="px-6 py-3 bg-gray-700 text-white rounded-lg disabled:opacity-50 hover:bg-gray-600 transition-colors"
+                onClick={handleToggleSound}
+                className={`absolute left-0 top-[470px] px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2
+                  border-2 border-white bg-transparent
+                  ${soundEnabled 
+                    ? 'text-white hover:bg-white/10' 
+                    : 'text-gray-300 hover:bg-white/10'
+                  }`}
+                title={soundEnabled ? "Sound On" : "Sound Off"}
               >
-                Bet -
-              </button>
-              <span className="px-6 py-3 font-bold text-2xl text-yellow-400">Bet: {bet}</span>
-              <button
-                onClick={() => setBet(Math.min(5, bet + 1))}
-                disabled={gamePhase === "holding"}
-                className="px-6 py-3 bg-gray-700 text-white rounded-lg disabled:opacity-50 hover:bg-gray-600 transition-colors"
-              >
-                Bet +
-              </button>
-              <button
-                onClick={gamePhase === "betting" ? dealHand : drawNewCards}
-                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xl min-w-[120px]"
-              >
-                {gamePhase === "betting" ? "Deal" : "Draw"}
+                {soundEnabled ? (
+                  <>
+                    <Volume2 size={20} className="text-green-500 animate-pulse" />
+                    <span>Sound On</span>
+                  </>
+                ) : (
+                  <>
+                    <VolumeX size={20} className="text-gray-400" />
+                    <span>Sound Off</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
 
-          <PayoutTable currentBet={bet} lastWin={lastWin} />
+          <div className="space-y-4">
+            <div className="flex justify-end space-x-6 items-center">
+              <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                Credits: {credits}
+              </div>
+              <button
+                onClick={() => signOut()}
+                className="border-2 border-white text-white px-6 py-2 rounded-lg transition-colors hover:bg-white/10"
+              >
+                Sign Out
+              </button>
+            </div>
+
+            <PayoutTable 
+              currentBet={bet} 
+              lastWin={lastWin} 
+              currentHandMultiplier={currentHandMultiplier}
+              onToggleSound={handleToggleSound}
+              soundEnabled={soundEnabled}
+            />
+          </div>
         </div>
       </div>
     </main>
