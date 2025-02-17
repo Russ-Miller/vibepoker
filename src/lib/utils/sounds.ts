@@ -27,25 +27,26 @@ if (typeof window !== "undefined") {
       },
     };
 
-    // Pre-load all sounds
+    // Pre-load all sounds and set appropriate volumes
     Object.values(SOUNDS).forEach(sound => {
       if (sound instanceof Audio) {
         sound.load();
         // Set volume for specific sounds
         if (sound === SOUNDS?.cardSlide) {
-          sound.volume = 0.4; // Softer card slide
+          sound.volume = 0.3; // Softer card slide
+          sound.playbackRate = 1.2; // Slightly faster card slide
+        } else if (sound === SOUNDS?.hold) {
+          sound.volume = 0.4; // Moderate button click
         } else if (sound === SOUNDS?.lose) {
-          sound.volume = 0.5; // Increased volume for lose sound
+          sound.volume = 0.5; // Clear lose sound
         }
       } else if (typeof sound === 'object') {
-        Object.values(sound).forEach(s => s.load());
+        Object.values(sound).forEach(s => {
+          s.load();
+          s.volume = 0.6; // Win sounds slightly louder
+        });
       }
     });
-
-    // Adjust volume for card slide
-    if (SOUNDS.cardSlide) {
-      SOUNDS.cardSlide.volume = 0.4; // Make it a bit softer
-    }
   } catch (error) {
     console.error("Failed to initialize sounds:", error);
   }
@@ -60,7 +61,8 @@ const playCardSlide = (delay: number = 0) => {
   if (!SOUNDS) return;
   
   const sound = new Audio("/sounds/card-slide.mp3");
-  sound.volume = 0.4;
+  sound.volume = 0.3;
+  sound.playbackRate = 1.2;
   
   setTimeout(() => {
     sound.play().catch(() => {
@@ -74,9 +76,9 @@ export const playSound = (sound: "deal" | "hold") => {
   
   try {
     if (sound === "deal") {
-      // Play multiple card slides with slight delays to simulate dealing 5 cards
+      // Play multiple card slides with shorter delays for snappier dealing
       for (let i = 0; i < 5; i++) {
-        playCardSlide(i * 100); // 100ms delay between each card
+        playCardSlide(i * 80); // 80ms delay between each card (faster than before)
       }
     } else {
       const audioElement = SOUNDS[sound];
@@ -106,17 +108,24 @@ export const playWinSound = (amount: number) => {
       } else {
         sound = SOUNDS.win.small;
       }
+      // For wins, let previous sounds finish (don't reset currentTime)
+      // This creates a more celebratory feel for wins
+      const playPromise = sound.play();
+      if (playPromise) {
+        playPromise.catch(() => {
+          // Ignore autoplay errors
+        });
+      }
     } else {
       // Play lose sound when amount is 0
       sound = SOUNDS.lose;
-    }
-
-    sound.currentTime = 0;
-    const playPromise = sound.play();
-    if (playPromise) {
-      playPromise.catch(() => {
-        // Ignore autoplay errors
-      });
+      sound.currentTime = 0; // Reset lose sound to start
+      const playPromise = sound.play();
+      if (playPromise) {
+        playPromise.catch(() => {
+          // Ignore autoplay errors
+        });
+      }
     }
   } catch (error) {
     console.error("Error playing win/lose sound:", error);
