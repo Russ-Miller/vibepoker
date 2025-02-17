@@ -240,8 +240,8 @@ export default function PokerGame() {
                       value={card.value}
                       suit={card.suit}
                       held={card.held}
-                      empty={!card.value}
                       onClick={() => toggleHold(index)}
+                      faceDown={!card.value}
                     />
                   ))}
                 </div>

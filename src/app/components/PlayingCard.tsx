@@ -7,13 +7,13 @@ interface PlayingCardProps {
   suit: "♠" | "♥" | "♦" | "♣";
   held: boolean;
   onClick: () => void;
-  empty?: boolean;
+  faceDown?: boolean;
 }
 
-export default function PlayingCard({ value, suit, held, onClick, empty = false }: PlayingCardProps) {
+export default function PlayingCard({ value, suit, held, onClick, faceDown = false }: PlayingCardProps) {
   const isRed = suit === "♥" || suit === "♦";
 
-  if (empty) {
+  if (faceDown) {
     return (
       <div
         className="w-32 h-48 rounded-xl border-2 border-indigo-300 cursor-pointer transition-all duration-200
